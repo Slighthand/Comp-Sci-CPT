@@ -1,0 +1,117 @@
+# pygame template
+
+import pygame
+from pygame.locals import K_ESCAPE, KEYDOWN, QUIT, K_RIGHT, K_LEFT
+
+pygame.init()
+pygame.font.init()
+
+WIDTH = 640
+HEIGHT = 480
+SIZE = (WIDTH, HEIGHT)
+
+screen = pygame.display.set_mode(SIZE)
+clock = pygame.time.Clock()
+
+# ---------------------------
+# Initialize global variables
+scene_title_font = pygame.font.SysFont('Arial', 50)
+current_screen = 0
+
+option_1 = scene_title_font.render('» Play', True, (255, 255, 255))
+option_1_rect = option_1.get_rect(topleft=(20, 50))
+option_2 = scene_title_font.render('» Settings', True, (255, 255, 255))
+option_2_rect = option_2.get_rect(topleft=(20, 100))
+
+circle_1 = (200, 200)
+circle_x = 200
+circle_y = 200
+circle_2 = (300, 300)
+circle_x_2 = 100
+circle_y_2 = 300
+circle_radius = 30
+circle_x_speed_1 = 5
+circle_y_speed_1 = 1
+circle_x_speed_2 = 5
+circle_y_speed_2 = 1
+# ---------------------------
+
+running = True
+while running:
+    # EVENT HANDLING
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.K_ESCAPE:
+            current_screen += 4
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if option_1_rect.collidepoint(event.pos):
+                current_screen += 2
+            elif option_2_rect.collidepoint(event.pos):
+                current_screen += 1
+            print(current_screen)
+        elif event.type == KEYDOWN and event.key == K_LEFT:
+            current_screen -= 1
+            print(current_screen)
+        elif event.type == QUIT:
+            running = False
+    # GAME STATE UPDATES
+    # All game math and comparisons happen here
+    
+    if circle_x + circle_radius > WIDTH or circle_x - circle_radius < 0:
+        circle_x_speed_1 *= -1
+
+    if circle_y + circle_radius > HEIGHT or circle_y - circle_radius < 0:
+        circle_y_speed_1 *= -1
+        
+    if circle_x_2 + circle_radius > WIDTH or circle_x_2 - circle_radius < 0:
+        circle_x_speed_2 *= -1
+
+    if circle_y_2 + circle_radius > HEIGHT or circle_y_2 - circle_radius < 0:
+        circle_y_speed_2 *= -1
+        
+    circle_x += circle_x_speed_1     # speed (high # = faster) (pixels per frame)
+    circle_y += circle_y_speed_1
+    
+    circle_x_2 += circle_x_speed_2     # speed (high # = faster) (pixels per frame)
+    circle_y_2 += circle_y_speed_2
+    
+
+    # DRAWING
+
+    if current_screen == 0:
+        # Scene 1 (Menu screen)
+        screen.fill((0, 0, 128))  # always the first drawing command
+        scene_title = scene_title_font.render('Menu Screen', True, (255, 255, 255))
+        screen.blit(scene_title, (0, 0))
+        screen.blit(option_1, (20, 50))
+        screen.blit(option_2, (20, 100))
+
+    elif current_screen == 1:
+        # Scene 2 (Settings screen)
+        screen.fill((128, 0, 0)) 
+        scene_title = scene_title_font.render('Settings', True, (255, 255, 255))
+        screen.blit(scene_title, (0, 0))
+
+    elif current_screen == 2:
+        # Scene 3 (Game)
+        screen.fill((255, 255, 255))  # always the first drawing command
+        pygame.draw.circle(screen, (255, 0, 0), (circle_x, circle_y), circle_radius)
+        pygame.draw.circle(screen, (255, 0, 0), (circle_x_2, circle_y_2), circle_radius)
+    
+    elif current_screen == 4:
+        # Scene 4 (Pause screen)
+        screen.fill((128, 0, 0)) 
+        scene_title = scene_title_font.render('Resume', True, (255, 255, 255))
+        scene_title_2 = scene_title_font.render('Quit', True, (255, 255, 255))
+        screen.blit(scene_title, (0, 0))
+        screen.blit(scene_title_2, (20, 50))
+
+    # Must be the last two lines
+    # of the game loop
+    pygame.display.flip()
+    clock.tick(30)
+    #---------------------------
+
+
+pygame.quit()
