@@ -1,0 +1,191 @@
+# pygame template
+
+import pygame
+from pygame.locals import K_ESCAPE, KEYDOWN, QUIT, K_RIGHT, K_LEFT
+import random
+
+pygame.init()
+pygame.font.init()
+
+WIDTH = 640
+HEIGHT = 480
+SIZE = (WIDTH, HEIGHT)
+
+screen = pygame.display.set_mode(SIZE)
+clock = pygame.time.Clock()
+
+# ---------------------------
+# Initialize global variables
+scene_title_font = pygame.font.SysFont('Arial', 50)
+text_font = pygame.font.SysFont('Arial', 30)
+current_screen = 0
+
+# Headings and Player Options
+option_1 = scene_title_font.render('» Play', True, (255, 255, 255))
+option_1_rect = option_1.get_rect(topleft=(20, 50))
+option_2 = scene_title_font.render('» Settings', True, (255, 255, 255))
+option_2_rect = option_2.get_rect(topleft=(20, 150))
+
+option_4 = scene_title_font.render('» Resume', True, (255, 255, 255))
+option_4_rect = option_4.get_rect(center=(320, 100))
+option_5 = scene_title_font.render('» Quit', True, (255, 255, 255))
+option_5_rect = option_5.get_rect(center=(320, 150))
+option_6 = scene_title_font.render('» Instructions', True, (255, 255, 255))
+option_6_rect = option_6.get_rect(center=(20, 100))
+pause_rect = pygame.Rect(600, 645, 8, 25)
+
+
+circle_x = random.randrange(WIDTH)
+circle_y = random.randrange(80, 400)
+circle_x_2 = random.randrange(WIDTH)
+circle_y_2 = random.randrange(80, 400)
+circle_radius = 30
+circle_x_speed_1 = 0.5
+circle_y_speed_1 = 0.5
+circle_x_speed_2 = 5
+circle_y_speed_2 = 1
+red_points = 0
+blue_points = 0
+winner = 'TIE'
+
+# Customizable attributes
+count = 0
+number_of_balls = 5
+speed = 2
+# ---------------------------
+
+running = True
+while running:
+    # EVENT HANDLING
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if option_1_rect.collidepoint(event.pos):
+                current_screen += 2
+            elif option_2_rect.collidepoint(event.pos):
+                current_screen += 1
+            elif pause_rect.collidepoint(event.pos):
+                current_screen += 1
+                if option_4_rect.collidepoint(event.pos):
+                    current_screen -= 1
+                elif option_5_rect.collidepoint(event.pos):
+                    current_screen -= 3
+            elif option_6_rect.collidepoint(event.pos):
+                current_screen += 4
+                if option_1_rect.collidepoint(event.pos):
+                    current_screen -= 2
+
+            print(current_screen)
+        elif event.type == QUIT:
+            running = False
+    # GAME STATE UPDATES
+    # All game math and comparisons happen here
+
+    # Team Red
+    # create bouncing balls
+    if circle_x + circle_radius > WIDTH or circle_x - circle_radius < 0:
+        circle_x_speed_1 *= -1
+
+    if circle_y + circle_radius > 400 or circle_y - circle_radius < 80:
+        circle_y_speed_1 *= -1
+
+    # Team Blue
+    if circle_x_2 + circle_radius > WIDTH or circle_x_2 - circle_radius < 0:
+        circle_x_speed_2 *= -1
+
+    if circle_y_2 + circle_radius > 400 or circle_y_2 - circle_radius < 80:
+        circle_y_speed_2 *= -1
+        
+    # circle_x += circle_x_speed_1     # speed (high # = faster) (pixels per frame)
+    # circle_y += circle_y_speed_1
+    
+    # circle_x_2 += circle_x_speed_2     # speed (high # = faster) (pixels per frame)
+    # circle_y_2 += circle_y_speed_2
+    
+    # Point system
+        # if bullet hits red balls, red_points += 10
+        # if bullet hits blue balls, blue_points += 10
+        # if bullet hits opponent, player hit freezes for 2 seconds
+    if red_points > blue_points:
+        winner = "Player 1"
+    elif blue_points > red_points:
+        winner = "Player 2"
+   
+    # DRAWING
+
+    if current_screen == 0:
+        # Scene 1 (Menu screen)
+        screen.fill((0, 0, 128))  # always the first drawing command
+        scene_title = scene_title_font.render('Menu Screen', True, (255, 255, 255))
+        screen.blit(scene_title, (0, 0))
+        screen.blit(option_1, (20, 50))
+        screen.blit(option_2, (20, 150))
+        screen.blit(option_6, (20, 100))
+        # ADD BACKGROUND
+    
+    elif current_screen == 1:
+        # Scene 2 (Settings screen)
+        screen.fill((128, 0, 0)) 
+        scene_title = scene_title_font.render('Settings', True, (255, 255, 255))
+        screen.blit(scene_title, (0, 0))
+        # MISSING CUSTOMIZATION OPTIONS (SPEED & NUMBER OF BALLS)
+        # ALSO ADD THE X BUTTON TO RETURN TO MENU
+
+    elif current_screen == 2:
+        # Scene 3 (Game)
+        screen.fill((255, 255, 255))  # always the first drawing command
+        pygame.draw.rect(screen, (0, 0, 0), (600, 30, 8, 25))    # Pause button
+        pygame.draw.rect(screen, (0, 0, 0), (615, 30, 8, 25))
+        for n in range(number_of_balls):
+            circle_x = random.randrange(WIDTH)
+            circle_y = random.randrange(80, 400)
+            pygame.draw.circle(screen, (255, 0, 0), (circle_x, circle_y), circle_radius)
+        # pygame.draw.circle(screen, (0, 0, 255), (circle_x_2, circle_y_2), circle_radius)
+                # count += 2
+        # MISSING POINTS DISPLAY, TIMER, PLAYERS, AND BULLETS
+    
+    elif current_screen == 3:
+        # Scene 4 (Pause screen)
+        screen.fill((128, 0, 0)) 
+        scene_title = scene_title_font.render('Game Paused', True, (255, 255, 255))
+        screen.blit(scene_title, (320, 100))
+        screen.blit(option_4, (320, 150))
+        screen.blit(option_5, (320, 200))
+        # NEED TO FIX FORMAT and PLACEMENT
+
+    elif current_screen == 4:
+        # Scene 5 (Instructions)
+        screen.fill((0, 0, 0))
+        scene_title = scene_title_font.render('Instructions', True, (255, 255, 255))
+        description = text_font.render('This is a 2 player game. Player 1 will use \
+                                        the keys A (to move left),W (to shoot RED \
+                                        balls), and D (to move right). Player 2 \
+                                        will use arrow keys (left and right to move, \
+                                        up to shoot BLUE balls). * If players shoot \
+                                        the wrong colour, their opponent will recieve \
+                                        10 points. * If player gets hit by opponents\' \
+                                        dart, player will freeze for 2 seconds. Collect \
+                                        the most points to win! Good luck!',
+                                        True, (255, 255, 255))
+
+        screen.blit(option_1, (100, 350))
+        screen.blit(scene_title, (100, 100))
+        screen.blit(description, (100, 150))
+
+    elif current_screen == 5:
+        # Scene 6 (Winner)
+        screen.fill((255, 223, 0))
+        scene_title = scene_title_font.render(winner, True, (0, 0, 0))
+        scene_title_2 = scene_title_font.render("WINS", True, (0, 0, 0))
+        screen.blit(scene_title, (240, 200))
+        screen.blit(scene_title_2, (240, 250))
+
+    # Must be the last two lines
+    # of the game loop
+    pygame.display.flip()
+    clock.tick(30)
+    #---------------------------
+
+
+pygame.quit()
