@@ -1,0 +1,406 @@
+# pygame template
+
+import pygame
+from pygame.locals import K_ESCAPE, KEYDOWN, QUIT, K_RIGHT, K_LEFT
+import random
+
+# DEFAULT_CHAR_SIZE = (100, 100)
+# DEFAULT_BALL_SIZE = (60, 60)
+def load_characters(DEFAULT_CHAR_SIZE: list):
+    # Import players (Waddle Dee [P1] and Kirby [P2])
+    p1 = pygame.image.load('WaddleP1.png')
+    p1 = pygame.transform.scale(p1, DEFAULT_CHAR_SIZE)
+    p2 = pygame.image.load('KirbyP2.png')
+    p2 = pygame.transform.scale(p2, DEFAULT_CHAR_SIZE)
+    p2 = pygame.transform.rotate(p2, 275)  # 290 degrees
+    return p1, p2
+    # Import targets
+def load_targets(DEFAULT_BALL_SIZE: list):
+    kirby_ball = pygame.image.load('kirball.png')
+    kirby_ball = pygame.transform.scale(kirby_ball, DEFAULT_BALL_SIZE)
+    
+    waddle_ball = pygame.image.load('Waddleball.png')
+    waddle_ball = pygame.transform.scale(waddle_ball, DEFAULT_BALL_SIZE)
+
+    return kirby_ball, waddle_ball
+
+pygame.init()
+pygame.font.init()
+
+# Set Display Size
+def set_display():
+    WIDTH = 640
+    HEIGHT = 480
+    SIZE = (WIDTH, HEIGHT)
+    all_screens = pygame.display.set_mode(SIZE)
+    return WIDTH, HEIGHT, all_screens
+
+def backgrounds():
+    background = pygame.image.load('Game_bg.png')
+    return background
+
+clock = pygame.time.Clock()
+
+# ---------------------------
+# Initialize global variables
+
+def set_font():
+    scene_title_font = pygame.font.SysFont('Arial', 50)
+    text_font = pygame.font.SysFont('Arial', 30)
+    return scene_title_font, text_font
+
+
+# Headings and Player Options
+def options(title: str, font):
+    option = font.render(title, True, (255, 255, 255))
+    option_rect = option.get_rect(topleft=(20, 50))
+    return option, option_rect
+
+pause_rect = pygame.Rect(600, 30, 23, 25)
+pause_rect_pressed = False
+
+# Control speed and location of targets
+kirby_x = random.randrange(0, 640)
+kirby_y = random.randrange(80, 400)
+kirby_speed_x = 8
+kirby_speed_y = 8
+waddle_x = 200
+waddle_y = random.randrange(80, 400)
+waddle_speed_x = 8
+waddle_speed_y = 8
+winner = 'TIE'
+
+# Set both players at center
+p1_x_position = 240
+p2_x_position = 240
+
+# Waddle Dee's dart points
+waddle_pts = [(300, 120), (280, 75), (320, 75)]
+x1 = 300    
+y1 = 120
+x2 = 280
+y2 = 75
+x3 = 320
+y3 = 75
+
+# Kirby's dart points
+kirby_pts = [(300, 380), (280, 425), (320, 425)]
+x4 = 300    
+y4 = 380
+x5 = 280
+y5 = 425
+x6 = 320
+y6 = 425
+
+# Customizable attributes in Settings
+x = random.randrange(0, 640)
+y = random.randrange(80, 400)
+# targets = []
+# ball_number = 1
+
+# Initialize Timer Variables
+timer_seconds = 1 * 60
+current_time = pygame.time.get_ticks()
+countdown_timer = timer_seconds * 1000
+
+# ---------------------------
+def main():
+    width, height, screen = set_display()
+    scene_title_font, text_font = set_font()
+    t = 5    # control variable (adjust the timer)
+    game_timer = timer(t * 60, text_font)
+    game_bg = backgrounds()
+    player_1, player_2 = load_characters([100, 100])
+    play, play_rect = options('play', scene_title_font)
+    instructions, instructions_rect = options('instructions', scene_title_font)
+    settings, settings_rect = options('settings', scene_title_font)
+    resume, resume_rect = options('resume', scene_title_font)
+    quit, quit_rect = options('quit', scene_title_font)
+    # Point adjustment box
+    more_targets = pygame.Rect(80, 100, 300, 100)
+    more_targets_text = scene_title_font.render("+", True, (128, 128, 128))
+    less_targets = pygame.Rect(50, 100, 300, 100)
+    less_targets_text = scene_title_font.render('-', True, (128, 128, 128))
+    
+    current_screen = 0
+    ball_number = []
+
+    running = True
+    while running:
+        # EVENT HANDLING
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if play_rect.collidepoint(event.pos):
+                    current_screen += 2
+                elif settings_rect.collidepoint(event.pos):
+                    current_screen += 1
+                elif pause_rect.collidepoint(event.pos):
+                    pause_rect_pressed = True
+                    current_screen += 1
+                    pause_rect_pressed = False
+                    if quit_rect.collidepoint(event.pos):
+                        current_screen -= 3
+                    elif resume_rect.collidepoint(event.pos):
+                        current_screen -= 1
+                elif instructions_rect.collidepoint(event.pos):
+                    current_screen += 4
+                    if play_rect.collidepoint(event.pos):
+                        current_screen -= 2
+                print(current_screen)
+                if more_targets.collidepoint(event.pos):
+                    ball_number.append(1)
+                elif less_targets.collidepoint(event.pos):
+                    ball_number.append(1)
+            elif event.type == QUIT:
+                running = False
+
+    # Shooting darts
+    keys = pygame.key.get_pressed()
+    if keys[119]:    # w
+        firing_waddle_darts(8, width)
+    if keys[1073741906]:    # up arrow
+        firing_kirby_darts(8, width)
+
+    
+    # GAME STATE UPDATES
+    # All game math and comparisons happen here
+    keys = pygame.key.get_pressed()
+    
+    # P1 Movements (Waddle Dee)
+    if keys[97] == True and p1_x_position > 0:    # a
+        p1_x_position -= 10
+        x1 -= 10
+        x2 -= 10
+        x3 -= 10
+
+    if keys[100] == True and p1_x_position < WIDTH:    # d
+        p1_x_position += 10
+        x1 += 10
+        x2 += 10
+        x3 += 10
+    
+    # P2 Movements (Kirby)
+    if keys[1073741904] == True and p2_x_position > 0:    # left arrow
+        p2_x_position -= 10
+        x4 -= 10
+        x5 -= 10
+        x6 -= 10
+    if keys[1073741903] == True and p2_x_position < WIDTH:    # right arrow
+        p2_x_position += 10
+        x4 += 10
+        x5 += 10
+        x6 += 10
+
+
+    # DRAWING
+
+    if current_screen == 0:
+        # Scene 1 (Menu screen)
+        screen.fill((0, 0, 128))  # always the first drawing command
+        scene_title = scene_title_font.render('Menu Screen', True, (255, 255, 255))
+        screen.blit(scene_title, (0, 0))
+        screen.blit(play, (20, 50))
+        screen.blit(instructions, (20, 100))
+        screen.blit(settings, (20, 150))
+        # ADD BACKGROUND
+
+    elif current_screen == 1:
+        # Scene 2 (Settings screen)
+        screen.fill((128, 0, 0)) 
+        scene_title = scene_title_font.render('Settings', True, (255, 255, 255))
+        screen.blit(scene_title, (0, 0))
+        pygame.draw.rect(screen, (0, 0, 125), more_targets)
+        screen.blit(more_targets_text, more_targets.topleft)
+        pygame.draw.rect(screen, (0, 0, 125), less_targets)
+        screen.blit(less_targets_text, less_targets.topleft)
+        screen.blit(play, (20, 50))
+
+        # MISSING CUSTOMIZATION OPTIONS (SPEED & NUMBER OF BALLS)
+        # ALSO ADD THE X BUTTON TO RETURN TO MENU
+
+    elif current_screen == 2:
+        # Scene 3 (Game)
+        screen.fill((255, 255, 255))  # always the first drawing command
+        screen.blit(game_bg, (0, 0))
+        kirby_target, waddle_target = load_targets([60, 60])
+        pygame.draw.rect(screen, (0, 0, 0), (600, 30, 8, 25))    # Pause button
+        pygame.draw.rect(screen, (0, 0, 0), (615, 30, 8, 25))
+        screen.blit(timer_text, (460, 75))
+        screen.blit(p1, (p1_x_position, 0))
+        pygame.draw.polygon(screen, (255, 0, 0), waddle_pts, width = 0)
+        screen.blit(p2, (p2_x_position, 400))
+        pygame.draw.polygon(screen, (255, 0, 0), kirby_pts, width = 0)
+        screen.blit(kirby_target, (kirby_x, kirby_y))
+        kirby_coord, waddle_coord  = targets(ball_number)
+        x = kirby_coord[::2]
+        y = kirby_coord[1::2]
+        for i in range(len(x)):
+            for i in range(len(y)):
+                screen.blit(kirby_target, (x[i], y)[i])
+        screen.blit(waddle_target, (waddle_x, waddle_y))
+        screen.blit(ball_number, (400, 30))
+# MISSING POINTS DISPLAY, TIMER, PLAYERS, AND BULLETS
+
+    elif current_screen == 3:
+        # Scene 4 (Pause screen)
+        screen.fill((128, 0, 0)) 
+        scene_title = scene_title_font.render('Game Paused', True, (255, 255, 255))
+        screen.blit(scene_title, (170, 100))
+        screen.blit(resume, (170, 150))
+        screen.blit(quit, (170, 200))
+        # NEED TO FIX FORMAT and PLACEMENT
+
+    elif current_screen == 4:
+        # Scene 5 (Instructions)
+        screen.fill((0, 0, 0))
+        scene_title = scene_title_font.render('Instructions', True, (255, 255, 255))
+        description = text_font.render('This is a 2 player game. Player 1 will', True, (255, 255, 255))
+        description_2 = text_font.render('use the keys A (to move left),W (to ', True, (255, 255, 255))
+        description_3 = text_font.render('shoot RED balls), and D (to move right).', True, (255, 255, 255))
+        description_4 = text_font.render('Player 2 will use arrow keys (left', True, (255, 255, 255))
+        description_5 = text_font.render('and right to move, up to shoot YELLOW', True, (255, 255, 255))
+        description_6 = text_font.render('balls). If players shoot the wrong color,', True, (255, 255, 255))
+        description_7 = text_font.render('their opponent will recieve 10 points.', True, (255, 255, 255))
+        description_8 = text_font.render("If player gets hit by opponents' dart,", True, (255, 255, 255)) 
+        description_9 = text_font.render('player will freeze for 2 seconds. Collect', True, (255, 255, 255)) 
+        description_10 = text_font.render('the most points to win! Good luck!', True, (255, 255, 255))
+
+        pygame.draw.rect(screen, (0, 0, 0), play_rect)
+        screen.blit(play_rect, (170, 400))
+        screen.blit(scene_title, (25, 50))
+        screen.blit(description, (25, 100))
+        screen.blit(description_2, (25, 130))
+        screen.blit(description_3, (25, 160))
+        screen.blit(description_4, (25, 190))
+        screen.blit(description_5, (25, 220))
+        screen.blit(description_6, (25, 250))
+        screen.blit(description_7, (25, 280))
+        screen.blit(description_8, (25, 310))
+        screen.blit(description_9, (25, 340))
+        screen.blit(description_10, (25, 370))
+
+    elif current_screen == 5:
+        # Scene 6 (Winner)
+        screen.fill((255, 223, 0))
+        scene_title = scene_title_font.render(winner, True, (0, 0, 0))
+        scene_title_2 = scene_title_font.render("WINS", True, (0, 0, 0))
+        screen.blit(scene_title, (240, 200))
+        screen.blit(scene_title_2, (240, 250))
+
+
+def targets(balls):
+    coord = []
+    coord_2 = []
+    for num in balls:
+        x = random.randrange(0, 640)
+        y = random.randrange(80, 400)
+        coord.append(x)
+        coord.append(y)
+    for num in balls:
+        x = random.randrange(0, 640)
+        y = random.randrange(80, 400)
+        coord_2.append(x)
+        coord_2.append(y)
+    return coord, coord_2
+
+        # Firing Darts
+def firing_waddle_darts(dart_speed, WIDTH):
+    y1 += dart_speed
+    y2 += dart_speed
+    y3 += dart_speed
+    if y3 == WIDTH:
+        y1 = 120
+        y2 = 75
+        y3 = 75
+
+def firing_kirby_darts(dart_speed, WIDTH):
+    y4 -= dart_speed
+    y5 -= dart_speed
+    y6 -= dart_speed
+    if y6 == 0:
+        y4 = 380
+        y5 = 425
+        y6 = 425
+
+    # kirby_2.0 = kirby_targets(width, [60, 60], kirby_coord, 8, 8)
+    if x + DEFAULT_BALL_SIZE[0] >= WIDTH or x - DEFAULT_BALL_SIZE[0] <= 0:
+        kirby_speed_x *= -1
+    if y + DEFAULT_BALL_SIZE[0] > 400 or y - DEFAULT_BALL_SIZE[0] < 80:
+        kirby_speed_y *= -1   
+    x += kirby_speed_x
+    y += kirby_speed_y
+    
+    # Kirby Targets
+# def kirby_targets(WIDTH, DEFAULT_BALL_SIZE, coordinates, kirby_speed_x, kirby_speed_y):
+#     kirby_target, waddle_target = load_targets([60, 60])
+#     kirby_copies = []
+#     for n in range(len(coordinates)):
+#         x = coordinates[::2]
+#         y = coordinates[1::2]
+#         screen.blit(kirby_target, (x, y))
+#         # kirby_copies.append(kirby_target.copy())
+#     return kirby_copies                
+
+    # Waddle Dee Target
+    if waddle_x + DEFAULT_BALL_SIZE[0] >= WIDTH or waddle_x - DEFAULT_BALL_SIZE[0] <= 0:
+        waddle_speed_x *= -1
+
+    if waddle_y + DEFAULT_BALL_SIZE[0] > 400 or waddle_y - DEFAULT_BALL_SIZE[0] < 80:
+        waddle_speed_y *= -1
+
+    waddle_x += waddle_speed_x
+    waddle_y += waddle_speed_y
+
+
+    # Timer (taken from ChatGPT)
+def timer(timer_seconds, font):
+    elapsed_time = pygame.time.get_ticks() - current_time
+    remaining_time = max(timer_seconds - int(elapsed_time / 1000), 0)
+    minutes = remaining_time // 60
+    seconds = remaining_time % 60
+    timer_text = font.render(f"Time: {minutes:02d}:{seconds:02d}", True, (0, 0, 0))
+    
+    if elapsed_time >= countdown_timer:
+        current_screen = 5    
+    
+    # Point system
+def points(kirby_coordinates, waddle_coordinates, kirby, waddle_dee):
+    p1_score = 0
+    p2_score = 0
+    for n in kirby_coordinates:
+        if y1 == n:
+            p1_score += 10
+        if y4 == n:
+            p2_score -= 20
+
+    return p1_score, p2_score
+    # if y1 == waddle_coordinates:
+    #     p1_score -= 20
+    # if y4 == waddle_coordinates:
+    #     p2_score += 10
+
+    # if y1 == kirby:
+        # freeze char for 2 seconds
+    # if y4 == waddle_dee:
+    
+        # if bullet hits red balls, red_points += 10
+        # if bullet hits blue balls, blue_points += 10
+        # if bullet hits opponent, player hit freezes for 2 seconds
+    # if red_points > blue_points:
+    #     winner = "Player 1"
+    # elif blue_points > red_points:
+    #     winner = "Player 2"
+
+if __name__ == "__main__":
+    main()
+    
+    # Must be the last two lines
+    # of the game loop
+    pygame.display.flip()
+    clock.tick(30)
+    #---------------------------
+
+
+pygame.quit()
