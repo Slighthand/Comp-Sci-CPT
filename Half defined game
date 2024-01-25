@@ -1,0 +1,228 @@
+# pygame template
+
+import pygame
+from pygame.locals import K_ESCAPE, KEYDOWN, QUIT, K_RIGHT, K_LEFT
+import random
+import math
+
+
+WIDTH = 640
+HEIGHT = 480
+SIZE = (WIDTH, HEIGHT)
+screen = pygame.display.set_mode(SIZE)
+
+def players(DEFAULT_CHAR_SIZE: list):
+   p1 = pygame.image.load('WaddleP1.png')
+   p1 = pygame.transform.scale(p1, DEFAULT_CHAR_SIZE)
+   p2 = pygame.image.load('KirbyP2.png')
+   p2 = pygame.transform.scale(p2, DEFAULT_CHAR_SIZE)
+   p2 = pygame.transform.rotate(p2, 275)  # 290 degrees
+   return p1, p2
+
+def load_targets(DEFAULT_BALL_SIZE: list):
+    kirby_ball = pygame.image.load('kirball.png')
+    kirby_ball = pygame.transform.scale(kirby_ball, DEFAULT_BALL_SIZE)
+
+    waddle_ball = pygame.image.load('Waddleball.png')
+    waddle_ball = pygame.transform.scale(waddle_ball, DEFAULT_BALL_SIZE)
+
+    return kirby_ball, waddle_ball
+
+def backgrounds():
+   background = pygame.image.load('Game_bg.png')
+   return background
+
+def set_font():
+    scene_title_font = pygame.font.SysFont('Arial', 50)
+    text_font = pygame.font.SysFont('Arial', 30)
+    return scene_title_font, text_font
+
+def options(title: str, font, coordinates: list):
+    option = font.render(title, True, (255, 255, 255))
+    option_rect = option.get_rect(topleft=(coordinates))
+    return option, option_rect
+
+pause_rect = pygame.Rect(600, 30, 23, 25)
+pause_rect_pressed = False
+
+# def timer(timer_seconds, current_time, countdown_timer, font):
+#     passed_time = pygame.time.get_ticks() - current_time
+#     remaining_time = max(timer_seconds - int(passed_time / 1000), 0)
+#     minutes = remaining_time // 60
+#     seconds = remaining_time % 60
+#     time_display = font.render(f"Time: {minutes:02d}:{seconds:02d}", True, (0, 0, 0))
+#     return passed_time, time_display
+# ---------------------------
+# Initialize global variables
+
+# Initialize Timer Variables
+timer_seconds = 1 * 60
+current_time = pygame.time.get_ticks()
+countdown_timer = timer_seconds * 1000
+
+# Control speed and location of targets
+kirby_x = random.randrange(0, 640)
+kirby_y = random.randrange(80, 400)
+kirby_speed_x = 8
+kirby_speed_y = 8
+waddle_x = 200
+waddle_y = random.randrange(80, 400)
+waddle_speed_x = 8
+waddle_speed_y = 8
+winner = 'TIE'
+
+# Set both players at center
+p1_x_position = 240
+p2_x_position = 240
+
+# Waddle Dee's dart points
+x1 = p1_x_position + 60 
+y1 = 120
+x2 = p1_x_position + 40
+y2 = 75
+x3 = p1_x_position + 80
+y3 = 75
+ # Kirby's dart points
+x4 = p2_x_position + 60 
+y4 = 380
+x5 = p2_x_position + 40
+y5 = 425
+x6 = p2_x_position + 80
+y6 = 425
+dart_speed_1 = 0
+dart_speed_2 = 0
+
+# Initialize Timer Variables
+time_in_seconds = 1 * 60
+real_time = pygame.time.get_ticks()
+countdown_time = timer_seconds * 1000
+# ---------------------------
+def main():
+   pygame.init()
+   pygame.font.init()
+   clock = pygame.time.Clock()
+   scene_title_font, text_font = set_font()
+   elapsed_time= pygame.time.get_ticks() - current_time
+   remaining_time = max(timer_seconds - int(elapsed_time / 1000), 0)
+   minutes = remaining_time // 60
+   seconds = remaining_time % 60
+   timer_text = text_font.render(f"Time: {minutes:02d}:{seconds:02d}", True, (0, 0, 0))
+   game_bg = backgrounds()
+   player_1, player_2 = players([100, 100])
+   play, play_rect = options('Play', scene_title_font, [20, 50])
+   play, play_instructions = options("Play", scene_title_font, [170, 400])
+   instructions, instructions_rect = options('Instructions', scene_title_font, [20, 100])
+   resume, resume_rect = options('Resume', scene_title_font, [170, 150])
+   quit, quit_rect = options('Quit', scene_title_font, [170, 200])
+   kirby_target, waddle_target = load_targets([60, 60])
+   # elapsed_time, timer_text = timer(time_in_seconds, real_time, countdown_time, text_font)
+   current_screen = 0
+   running = True
+   while running:
+       # EVENT HANDLING
+       for event in pygame.event.get():
+           if event.type == pygame.QUIT:
+               running = False
+           if event.type == pygame.MOUSEBUTTONDOWN:
+               if play_rect.collidepoint(event.pos):
+                   current_screen += 2
+               elif pause_rect.collidepoint(event.pos):
+                   pause_rect_pressed = True
+                   current_screen += 1
+                   pause_rect_pressed = False
+               elif quit_rect.collidepoint(event.pos):
+                   current_screen -= 3
+               elif resume_rect.collidepoint(event.pos):
+                   current_screen -= 1
+               elif instructions_rect.collidepoint(event.pos):
+                   current_screen += 4
+               elif play_rect.collidepoint(event.pos):
+                   current_screen -= 2
+               print(current_screen)
+           if event.type == pygame.QUIT:
+               running = False
+
+      # GAME STATE UPDATES
+       # All game math and comparisons happen here
+   
+       # DRAWING
+       if current_screen == 0:
+           # Scene 1 (Menu screen)
+           screen.fill((0, 0, 128))  # always the first drawing command
+           scene_title = scene_title_font.render('Menu Screen', True, (255, 255, 255))
+           screen.blit(scene_title, (0, 0))
+           screen.blit(play, (20, 50))
+           screen.blit(instructions, (20, 100))
+       elif current_screen == 2:
+           # Scene 3 (Game)
+           screen.fill((255, 255, 255))  # always the first drawing command
+           screen.blit(game_bg, (0, 0))
+           pygame.draw.rect(screen, (0, 0, 0), (600, 30, 8, 25))    # Pause button
+           pygame.draw.rect(screen, (0, 0, 0), (615, 30, 8, 25))
+           # screen.blit(timer_text, (460, 75))
+           screen.blit(p1, (p1_x_position, 0))
+           pygame.draw.polygon(screen, (255, 0, 0), [(x1, y1), (x2, y2), (x3, y3)], width = 0)
+           screen.blit(p2, (p2_x_position, 400))
+           pygame.draw.polygon(screen, (255, 0, 0), [(x4, y4), (x5, y5), (x6, y6)], width = 0)
+           screen.blit(kirby_target, (kirby_x, kirby_y))
+              # for pos in kirby_positions:
+              #     screen.blit(kirby_ball, pos)
+              #     pos_x = pos[0]
+              #     pos_y = pos[1]
+              #     if pos_x + DEFAULT_BALL_SIZE[0] >= WIDTH or pos_x - DEFAULT_BALL_SIZE[0] < 0:
+              #         kirby_speed_x *= -1
+              #     if pos_y + DEFAULT_BALL_SIZE[0] > 380 or pos_y - DEFAULT_BALL_SIZE[0] < 80:
+              #         kirby_speed_y *= -1
+              #     pos_x += kirby_speed_x
+              #     pos_y += kirby_speed_y
+           screen.blit(waddle_target, (waddle_x, waddle_y))
+           # p1_points = scene_title_font.render(str(P1_points), True, (255, 255, 255))
+           # p2_points = scene_title_font.render(str(P2_points), True, (255, 255, 255))
+           # screen.blit(p1_points, (570, 100))
+           # screen.blit(p2_points, (570, 400))
+       elif current_screen == 3:
+           # Scene 4 (Pause screen)
+           screen.fill((128, 0, 0)) 
+           scene_title = scene_title_font.render('Game Paused', True, (255, 255, 255))
+           screen.blit(scene_title, (170, 100))
+           screen.blit(resume, (170, 150))
+           screen.blit(quit, (170, 200))
+       elif current_screen == 4:
+           # Scene 5 (Instructions)
+           screen.fill((0, 0, 0))
+           scene_title = scene_title_font.render('Instructions', True, (255, 255, 255))
+           description = text_font.render('This is a 2 player game. Player 1 will', True, (255, 255, 255))
+           description_2 = text_font.render('use the keys A (to move left),W (to ', True, (255, 255, 255))
+           description_3 = text_font.render('shoot RED balls), and D (to move right).', True, (255, 255, 255))
+           description_4 = text_font.render('Player 2 will use arrow keys (left', True, (255, 255, 255))
+           description_5 = text_font.render('and right to move, up to shoot YELLOW', True, (255, 255, 255))
+           description_6 = text_font.render('balls). If players shoot the wrong color,', True, (255, 255, 255))
+           description_7 = text_font.render('they will lose 10 points. Collect', True, (255, 255, 255))
+           description_10 = text_font.render('the most points to win! Good luck!', True, (255, 255, 255))
+    
+           screen.blit(play_instructions, (170, 400))
+           screen.blit(scene_title, (25, 50))
+           screen.blit(description, (25, 100))
+           screen.blit(description_2, (25, 130))
+           screen.blit(description_3, (25, 160))
+           screen.blit(description_4, (25, 190))
+           screen.blit(description_5, (25, 220))
+           screen.blit(description_6, (25, 250))
+           screen.blit(description_7, (25, 280))
+           screen.blit(description_10, (25, 310))
+       elif current_screen == 5:
+           # Scene 6 (Winner)
+           screen.fill((255, 223, 0))
+           scene_title = scene_title_font.render(winner, True, (0, 0, 0))
+           scene_title_2 = scene_title_font.render("WINS", True, (0, 0, 0))
+           screen.blit(scene_title, (240, 200))
+           screen.blit(scene_title_2, (240, 250))
+   
+if __name__ == "__main__":
+    main()
+    pygame.display.flip()
+    clock.tick(30)
+    #---------------------------
+
+
+pygame.quit()
